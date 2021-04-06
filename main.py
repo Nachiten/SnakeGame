@@ -1,8 +1,9 @@
 import pygame
 import random
 
-# import time
-# from datetime import datetime
+#############
+# VERSION 2.0
+#############
 
 pygame.init()
 
@@ -29,6 +30,7 @@ class Izquierda:
 
 def realizarMovimiento(offsetX, offsetY):
     global run
+    global jugando
     global posicionAAgregar
     global cantComidaRecogida
     global segundosDelay
@@ -37,16 +39,15 @@ def realizarMovimiento(offsetX, offsetY):
 
     moverPrimerBloque(offsetX, offsetY)
     if choqueConVibora():
-        run = False
+        jugando = False
 
     # print("Cant comida recogida: " + str(cantComidaRecogida))
 
     if recogiComida():
         cantComidaRecogida += 1
 
-        if cantComidaRecogida % 3 == 0:
-            segundosDelay = max(0.03, segundosDelay - 0.05)
-            print("Segundos delay cambia a: " + str(segundosDelay))
+        segundosDelay = max(0.03, segundosDelay - 0.02)
+        print("Segundos delay cambia a: " + str(segundosDelay))
 
         agregarUnBloque()
         generarComidaEnPosicionRandom()
@@ -64,7 +65,6 @@ def realizarMovimiento(offsetX, offsetY):
 
 
 def generarComidaEnPosicionRandom():
-
     global posicionComida
 
     while True:
@@ -157,43 +157,73 @@ def dibujarComida():
     dibujarRectangulo(colorComida, posicionComida[0], posicionComida[1])
 
 
-def obtenerInput():
-    for evento in pygame.event.get():
-        if evento.type == pygame.QUIT:
-            global run
-            run = False
-        if evento.type == pygame.KEYDOWN:
-            pass
+def clickearBotonNaranja(unaPos):
+    global jugando
 
-    pressed = pygame.key.get_pressed()
+    posX = unaPos[0]
+    posY = unaPos[1]
 
+    # pygame.draw.rect(ventana, (20, 80, 80), (anchoVentana - 150, 40, 105, 35))
+
+    if anchoVentana - 150 < posX < anchoVentana - 45 and 40 < posY < 75:
+        reiniciarJuego()
+        jugando = True
+
+
+def reiniciarJuego():
+    global posicionesVibora
+    global cantComidaRecogida
+    global segundosDelay
     global direccionActual
     global movimiento
 
+    posicionesVibora = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0)]
+    cantComidaRecogida = 0
+    segundosDelay = 0.2
+    direccionActual = "AB"
+    movimiento = Abajo()
+    generarComidaEnPosicionRandom()
+
+
+def obtenerInput():
+    global run
+    global direccionActual
+    global movimiento
+
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            run = False
+        if evento.type == pygame.KEYDOWN:
+            pass
+        if evento.type == pygame.MOUSEBUTTONDOWN:
+            clickearBotonNaranja(pygame.mouse.get_pos())
+
+    pressed = pygame.key.get_pressed()
+
     if pressed[pygame.K_LEFT]:
         if direccionActual != "D":
-            print("Moviendo Izquierda")
+            # print("Moviendo Izquierda")
             direccionActual = "I"
             movimiento = Izquierda()
         else:
             print("No puedo moverme Izquierda porque me estoy moviendo Derecha")
     if pressed[pygame.K_RIGHT]:
         if direccionActual != "I":
-            print("Moviendo Derecha")
+            # print("Moviendo Derecha")
             direccionActual = "D"
             movimiento = Derecha()
         else:
             print("No puedo moverme Derecha porque me estoy moviendo Izquierda")
     if pressed[pygame.K_UP]:
         if direccionActual != "AB":
-            print("Moviendo Arriba")
+            # print("Moviendo Arriba")
             direccionActual = "AR"
             movimiento = Arriba()
         else:
             print("No puedo moverme Arriba porque me estoy moviendo Abajo")
     if pressed[pygame.K_DOWN]:
         if direccionActual != "AR":
-            print("Moviendo Abajo")
+            # print("Moviendo Abajo")
             direccionActual = "AB"
             movimiento = Abajo()
         else:
@@ -232,19 +262,27 @@ def actualizarContadorPuntos():
 
     # create a text suface object,
     # on which text is drawn on it.
-    text = font.render('Cantidad Puntos: ' + str(cantComidaRecogida), True, (200, 200, 200), (0, 0, 0))
+    textoPuntos = font.render('Cantidad Puntos: ' + str(cantComidaRecogida), True, (200, 200, 200), (0, 0, 0))
+    textoReiniciar = font.render('Reiniciar', True, (200, 200, 200), (20, 80, 80))
 
     # create a rectangular object for the
     # text surface object
-    textRect = text.get_rect()
+    textRect = textoPuntos.get_rect()
+    textRect2 = textoReiniciar.get_rect()
 
     # set the center of the rectangular object.
     textRect.center = (500, 20)
+    textRect2.center = (anchoVentana - 150 + 53, 57)
 
     # copying the text surface object
     # to the display surface object
     # at the center coordinate.
-    ventana.blit(text, textRect)
+    ventana.blit(textoPuntos, textRect)
+    ventana.blit(textoReiniciar, textRect2)
+
+
+def generarBotonNaranja():
+    pygame.draw.rect(ventana, (20, 80, 80), (anchoVentana - 150, 40, 105, 35))
 
 
 # Comienza ejecucion
@@ -271,7 +309,6 @@ colorVibora = (255, 50, 50)
 colorCabeza = (255, 0, 0)
 colorComida = (0, 255, 0)
 
-
 pygame.display.set_caption("Snake Game")
 
 posicionesVibora = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0)]
@@ -288,16 +325,14 @@ posicionComida = (0, 0)
 cantComidaRecogida = 0
 
 generarComidaEnPosicionRandom()
-
+generarBotonNaranja()
 
 run = True
+jugando = True
 
 while run:
-    ejecutarUnMovimiento()
-
-
-while True:
     obtenerInput()
-    pygame.time.delay(int(0.5 * 1000))
+    if jugando:
+        ejecutarUnMovimiento()
 
 pygame.quit()
